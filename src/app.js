@@ -1,36 +1,44 @@
-console.log("Merhaba Kodlama.io")
-
-//JS type safe değildir
-let dolarBugun = 9.30
-
-let dolarDun = 9.20
-dolarDun = "9.20"
-{
-    let dolarDun = 9.10
+class   Deneme {
+	constructor() {
+		console.log('Deneme class çalıştı');
+	}
 }
 
-console.log(dolarDun)
+let  hehe = new Deneme();
 
-const euroDun = 11.2
-//euroDun = 11
+Deneme.bilal = 5;
 
-console.log(euroDun)
+console.log(Deneme.bilal);
+console.log(hehe.bilal);
 
-//array
-//camelCasing
-//PascalCasing
-let konutKredileri = ["Konut kredisi","Emlak Konut Kredisi","Kamu Konut Kredisi","Özel Konut Kredisi"]
-
-console.log("<ul>")
-for(let i = 0;i<konutKredileri.length;i++){
-    console.log("<li>"+konutKredileri[i]+"</li>")
+function    test(def = 5, ...args) {
+	console.log(def, " - ", ...args);
 }
-console.log("</ul>")
 
-{/* <ul>
-    <li>Konut kredisi</li>
-    <li>Emlak Konut Kredisi</li>
-    <li>Kamu Konut Kredisi</li>
-</ul> */}
+test(undefined, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
-console.log(konutKredileri)
+let	 arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+console.log(Math.max(...arr));
+console.log("ABC" , ..."DEF");
+
+let	 [hebele, hübele] = arr
+
+function	test2([a]) {
+	console.log(a);
+}
+
+test2(arr);
+
+let obj = {a:10, b:20, c:30};
+
+let {a, b, c} = obj;
+console.log(a)
+
+import {
+	addToCart
+} from "./functions.js";
+
+addToCart("Elma");
+
+console.log(hehe.type)
