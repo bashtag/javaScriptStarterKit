@@ -1,110 +1,152 @@
-import { users } from "../data/users.js"
-import DataError from "../models/dataError.js"
+import { users } from "../data/users.js";
+import DataError from "../modules/dataError.js";
+import AbstractUser from "../modules/abstractUser.js";
 
-export default class UserService {
-    constructor(loggerService) {
-        this.employees = []
-        this.customers = []
-        this.errors = []
-        this.loggerService = loggerService
-    }
 
-    load() {
-        for (const user of users) {
-            switch (user.type) {
-                case "customer":
-                    if (!this.checkCustomerValidityForErrors(user)) {
-                        this.customers.push(user)
-                    }
-                    break;
-                case "employee":
-                    if (!this.checkEmployeeValidityForErrors(user)) {
-                        this.employees.push(user)
-                    }
-                    break;
-                default:
-                    this.errors.push(new DataError("Wrong user type", user))
-                    break;
-            }
-        }
-    }
+// default: default class for this file
+export default class	UserService {
+	// private properties
+	#employees = []
+	#customers = []
+	#errors = []
+	#loggerService
 
-    //formik-yup
-    checkCustomerValidityForErrors(user) {
-        let requiredFields = "id firstName lastName age city".split(" ")
-        let hasErrors = false
-        for (const field of requiredFields) {
-            if (!user[field]) {
-                hasErrors = true
-                this.errors.push(
-                    new DataError(`Validation problem. ${field} is required`, user))
-            }
-        }
+	/**
+	 * Constructs with a logger
+	 * Makes load operation to load data from users.js
+	 * @param {BaseLogger} loggerService 
+	 */
+	constructor(loggerService) {
+		this.#loggerService = loggerService
+		this.#load()
+	}
 
-        if (Number.isNaN(Number.parseInt(+user.age))) {
-            hasErrors = true
-            this.errors.push(new DataError(`Validation problem. ${user.age} is not a number`, user))
-        }
+	/**
+	 * private load function to load data in users.js to this class
+	 */
+	#load() {
+		for (const user of users) {
+			this.add(user)
+		}
+	}
 
-        return hasErrors
-    }
+	/**
+	 * Add a user to an appropriate list.
+	 * If an error occurs then push the error to the errors list
+	 * @param {AbstractUser} abstractUser 
+	 */
+	add(abstractUser) {
+		if (abstractUser.type == "customer") {
+			if (!this.#checkCustomerValidtyForErrors(abstractUser))
+				this.#customers.push(abstractUser)
+		}
+		else if (abstractUser.type == "employee") {
+			if (!this.#checkEmployeeValidtyForErrors(abstractUser))
+				this.#employees.push(abstractUser)
+		}
+		else
+			this.#errors.push(new DataError("Wrong user type" , abstractUser))
 
-    checkEmployeeValidityForErrors(user) {
-        let requiredFields = "id firstName lastName age city salary".split(" ")
-        let hasErrors = false
-        for (const field of requiredFields) {
-            if (!user[field]) {
-                hasErrors = true
-                this.errors.push(
-                    new DataError(`Validation problem. ${field} is required`, user))
-            }
-        }
+		this.#loggerService.log(abstractUser)
+	}
 
-        if (Number.isNaN(Number.parseInt(user.age))) {
-            hasErrors = true
-            this.errors.push(new DataError(`Validation problem. ${user.age} is not a number`, user))
-        }
-        return hasErrors
-    }
+	
+	/**
+	 * Check user validty.
+	 * If there will be a problem, then DataError occurs in of errors list
+	 * @param {AbstractUser} abstractUser 
+	 * @param {string} extension 
+	 * @returns Is there an error or not
+	 */
+	#checkUserValidtyForErrors(abstractUser, extension) {
+		let	required = "id firstName lastName age city " + extension
+		let requiredFields = required.split(" ")
+		let	hasErrors = false
 
-    add(user) {
-        switch (user.type) {
-            case "customer":
-                if (!this.checkCustomerValidityForErrors(user)) {
-                    this.customers.push(user)
-                }
-                break;
-            case "employee":
-                if (!this.checkEmployeeValidityForErrors(user)) {
-                    this.employees.push(user)
-                }
-                break;
-            default:
-                this.errors.push(
-                    new DataError("This user can not be added. Wrong user type", user))
-                break;
-        }
-        this.loggerService.log(user)
-    }
+		for (const field of requiredFields) {
+			if (!abstractUser[field]) {
+				hasErrors = true
+				this.#errors.push(new DataError(`Validation problem. ${field} is required.`, abstractUser))
+			}
+		}
 
-    listCustomers() {
-        return this.customers
-    }
+		if (Number.isNaN(Number.parseInt(+abstractUser.age))) {
+			hasErrors = true
+			this.#errors.push(new DataError(`Validation problem. ${abstractUser.age} is not a number.`, abstractUser))
+		}
 
-    getCustomerById(id) {
-        return this.customers.find(u=>u.id ===id)
-    }
+		return (hasErrors)
+	}
 
-    getCustomersSorted(){
-        return this.customers.sort((customer1,customer2)=>{
-            if(customer1.firstName>customer2.firstName){
-                return 1;
-            }else if(customer1.firstName===customer2.firstName){
-                return 0;
-            }else{
-                return -1
-            }
-        })
-    }
+	/**
+	 * 
+	 * @param {AbstractUser} abstractUser 
+	 * @returns Is there an error or not
+	 * 
+	 */
+	#checkCustomerValidtyForErrors(abstractUser) {
+		return (this.#checkUserValidtyForErrors(abstractUser, "creditCardNumber"))
+	}
 
+	/**
+	 * 
+	 * @param {AbstractUser} abstractUser 
+	 * @returns Is there an error or not
+	 * 
+	 */
+	#checkEmployeeValidtyForErrors(abstractUser) {
+		return (this.#checkUserValidtyForErrors(abstractUser, "salary"))
+	}
+
+	/**
+	 * list of customers
+	 * @returns {Array<Customer>}
+	 */
+	listCustomers() {
+		return (this.#customers)
+	}
+
+	/**
+	 * list of employees
+	 * @returns {Array<Employee>}
+	 */
+	listEmployees() {
+		return (this.#employees)
+	}
+
+	/**
+	 * list of errors
+	 * @returns {Array<DataError>}
+	 */
+	listErrors() {
+		return (this.#errors)
+	}
+
+	/**
+	 * Fetch the user using id
+	 * @param {number} id 
+	 * @returns user
+	 */
+	getById(id) {
+		let user = this.#customers.find(c => c.id == id)
+
+		if (!user)
+			return (user)
+		return (this.#employees.find(e => e.id == id))
+	}
+
+	/**
+	 * 
+	 * @returns sorted customer array
+	 */
+	getCustomersSorted() {
+		return (this.#customers.sort((c1, c2) => {
+			if (c1.id > c2.id)
+				return (1);
+			else if (c1.firstName === c2.firstName)
+				return (0);
+			else
+				return (-1);
+		}))
+	}
 }
